@@ -1,0 +1,246 @@
+import { sanitizeEmailHtml } from "../../utils/sanitize";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Badge } from "../ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Mail, FileText, Loader2 } from "lucide-react";
+
+const EmailComposerDialog = ({
+  open,
+  onOpenChange,
+  emailComposerData,
+  editedEmailSubject,
+  setEditedEmailSubject,
+  editedEmailBody,
+  setEditedEmailBody,
+  editedEmailTo,
+  setEditedEmailTo,
+  editedEmailCc,
+  setEditedEmailCc,
+  sendingEmail,
+  onSendEmail,
+}) => {
+  if (!emailComposerData) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Mail className="w-5 h-5 text-primary" />
+            {emailComposerData.email_type === 'welcome' && 'Send Welcome Email'}
+            {emailComposerData.email_type === 'sales_agreement' && 'Send Sales Agreement'}
+            {emailComposerData.email_type === 'allotment_letter' && 'Send Allotment Letter'}
+            {emailComposerData.email_type === 'interior' && 'Send Interior Design Email'}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {/* Editable Email Fields */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs text-slate-500">To (Editable)</Label>
+                <Input 
+                  value={editedEmailTo} 
+                  onChange={(e) => setEditedEmailTo(e.target.value)}
+                  placeholder="recipient@email.com"
+                  className="border-primary/50"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-slate-500">CC (Optional)</Label>
+                <Input 
+                  value={editedEmailCc} 
+                  onChange={(e) => setEditedEmailCc(e.target.value)}
+                  placeholder="cc@email.com"
+                  className="border-primary/50"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs text-slate-500">Customer</Label>
+                <Input 
+                  value={emailComposerData.customer_name} 
+                  readOnly 
+                  className="bg-slate-50"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-xs text-slate-500">Subject (Editable)</Label>
+              <Input 
+                value={editedEmailSubject} 
+                onChange={(e) => setEditedEmailSubject(e.target.value)}
+                className="border-primary/50"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-xs text-slate-500">Email Body (Editable)</Label>
+              <textarea 
+                value={editedEmailBody}
+                onChange={(e) => setEditedEmailBody(e.target.value)}
+                rows={5}
+                className="w-full border border-primary/50 rounded-md p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            
+            {/* Attachments Info — hidden for emails that have no PDF
+                attachments (e.g. Interior email uses inline CTA buttons). */}
+            {emailComposerData.attachment_filename && (
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                <FileText className="w-5 h-5 text-red-500" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Attachments (Auto-generated)</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Badge variant="outline" className="text-xs">
+                      {emailComposerData.attachment_filename}
+                    </Badge>
+                    {emailComposerData.attachment_filename_2 && (
+                      <Badge variant="outline" className="text-xs">
+                        {emailComposerData.attachment_filename_2}
+                      </Badge>
+                    )}
+                    {emailComposerData.attachment_filename_3 && (
+                      <Badge variant="outline" className="text-xs">
+                        {emailComposerData.attachment_filename_3}
+                      </Badge>
+                    )}
+                    {emailComposerData.attachment_filename_4 && (
+                      <Badge variant="outline" className="text-xs">
+                        {emailComposerData.attachment_filename_4}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {emailComposerData.email_type === 'interior' && (
+              <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <Mail className="w-5 h-5 text-amber-600" />
+                <div className="flex-1 text-sm text-amber-900">
+                  <span className="font-medium">No attachment.</span>{' '}
+                  Sunrise DesignHive CTA buttons (Book Consultation, View Catalog, Instagram) are embedded inside the email body — recipients can act in one click.
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Preview Tabs */}
+          <div>
+            <Tabs defaultValue="preview">
+              <TabsList className={`grid w-full max-w-3xl ${
+                emailComposerData.email_type === 'welcome' ? 'grid-cols-5' :
+                emailComposerData.email_type === 'interior' ? 'grid-cols-1' :
+                'grid-cols-3'
+              }`}>
+                <TabsTrigger value="preview">Email Preview</TabsTrigger>
+                {emailComposerData.email_type !== 'interior' && emailComposerData.attachment_filename && (
+                  <TabsTrigger value="attachment1">
+                    {emailComposerData.email_type === 'welcome' ? 'Form Preview' :
+                     emailComposerData.email_type === 'sales_agreement' ? 'Sales Agreement' :
+                     'Allotment Letter'}
+                  </TabsTrigger>
+                )}
+                {emailComposerData.attachment_html_2 && (
+                  <TabsTrigger value="attachment2">
+                    {emailComposerData.email_type === 'welcome' ? 'Terms & Conditions' : 'Price Breakup'}
+                  </TabsTrigger>
+                )}
+                {emailComposerData.attachment_html_3 && (
+                  <TabsTrigger value="attachment3">Price Breakup</TabsTrigger>
+                )}
+                {emailComposerData.attachment_pdf_base64_4 && (
+                  <TabsTrigger value="attachment4">Registration Charges</TabsTrigger>
+                )}
+              </TabsList>
+              
+              <TabsContent value="preview" className="max-h-[300px] overflow-auto border rounded-lg mt-2 bg-white">
+                <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(emailComposerData.email_html) }} />
+              </TabsContent>
+              
+              {emailComposerData.email_type !== 'interior' && emailComposerData.attachment_html && (
+                <TabsContent value="attachment1" className="max-h-[300px] overflow-auto border rounded-lg mt-2 bg-white">
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(emailComposerData.attachment_html) }} />
+                </TabsContent>
+              )}
+              
+              {emailComposerData.attachment_html_2 && (
+                <TabsContent value="attachment2" className="max-h-[300px] overflow-auto border rounded-lg mt-2 bg-white">
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(emailComposerData.attachment_html_2) }} />
+                </TabsContent>
+              )}
+              
+              {emailComposerData.attachment_html_3 && (
+                <TabsContent value="attachment3" className="max-h-[300px] overflow-auto border rounded-lg mt-2 bg-white">
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(emailComposerData.attachment_html_3) }} />
+                </TabsContent>
+              )}
+              
+              {emailComposerData.attachment_pdf_base64_4 && (
+                <TabsContent value="attachment4" className="max-h-[400px] border rounded-lg mt-2 bg-white">
+                  {/* Static PDF binary — rendered via iframe with a sandboxed
+                      data URL so the user can flip through the Total
+                      Registration Charges schedule directly in the dialog. */}
+                  <iframe
+                    title="Total Registration Charges Preview"
+                    src={`data:application/pdf;base64,${emailComposerData.attachment_pdf_base64_4}`}
+                    className="w-full h-[400px] border-0"
+                    data-testid="attachment-pdf-preview-4"
+                  />
+                </TabsContent>
+              )}
+            </Tabs>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center pt-4 border-t">
+            <div className="text-sm text-slate-500">
+              {emailComposerData.has_sendgrid ? (
+                <span className="text-green-600">✓ SendGrid configured</span>
+              ) : (
+                <span className="text-amber-600">⚠ Email will be simulated</span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={onSendEmail} 
+                disabled={sendingEmail}
+                className="bg-green-600 hover:bg-green-700"
+                data-testid="confirm-send-email-btn"
+              >
+                {sendingEmail ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Email
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default EmailComposerDialog;
