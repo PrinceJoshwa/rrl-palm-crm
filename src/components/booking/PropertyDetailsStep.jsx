@@ -64,7 +64,7 @@ const PropertyDetailsStep = ({ formData, onInputChange, onSelectChange, priceCal
           </div>
           <div className="p-3 bg-slate-50 rounded-md border">
             <Label className="text-xs text-slate-600">Car Parking Charges</Label>
-            <p className="font-semibold text-slate-800 mt-1">&#8377;2,00,000 <span className="text-xs font-normal text-slate-500">(fixed)</span></p>
+            <p className="font-semibold text-slate-800 mt-1">&#8377;3,00,000 <span className="text-xs font-normal text-slate-500">(fixed)</span></p>
           </div>
           <p className="col-span-2 text-xs text-slate-500">These are fixed at booking. Admin can edit them later from the customer profile if required.</p>
         </div>
