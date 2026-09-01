@@ -166,8 +166,17 @@ const EditableDocumentDialog = ({
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      // If user is currently editing, auto-save first
-      if (editing) await handleSave();
+      // If user is currently editing, save the iframe HTML before rendering PDF.
+      if (editing) {
+        const docu = iframeRef.current?.contentDocument;
+        if (docu) {
+          const updated = "<!DOCTYPE html>\n" + docu.documentElement.outerHTML;
+          await axios.put(`${API}/documents/html/${doc.id}`, { content: updated });
+          setContent(updated);
+          setEditing(false);
+          if (onSaved) onSaved();
+        }
+      }
       const response = await axios.get(`${API}/documents/pdf/${doc.id}`, {
         responseType: "blob",
       });
@@ -187,9 +196,21 @@ const EditableDocumentDialog = ({
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch {
-      toast.error("Failed to download PDF");
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      let message = "Failed to download PDF";
+      const data = e?.response?.data;
+      if (data instanceof Blob && data.type?.includes("application/json")) {
+        try {
+          const errorJson = JSON.parse(await data.text());
+          message = errorJson?.detail || message;
+        } catch {
+          // Keep the generic message if the error payload cannot be parsed.
+        }
+      } else if (e?.response?.data?.detail) {
+        message = e.response.data.detail;
+      }
+      toast.error(message);
     } finally {
       setDownloading(false);
     }
