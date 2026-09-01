@@ -30,7 +30,7 @@ export const initialFormData = {
   // Property
   project: "", tower: "", unit_number: "", bhk_type: "", floor: "",
   saleable_area: "", rate_per_sqft: "6600", floor_rise_cost: "0",
-  parking: "1", club_house_charges: "300000", car_parking_charges: "200000",
+  parking: "1", club_house_charges: "300000", car_parking_charges: "300000",
   additional_charges: "0", bescom_rate: "0",
   // Payment
   booking_amount: "", transaction_details: "", transaction_date: "", transaction_bank: "",
@@ -56,7 +56,7 @@ export const calculatePrice = (formData) => {
   const ratePerSqft = parseFloat(formData.rate_per_sqft) || 0;
   const floorRiseCost = parseFloat(formData.floor_rise_cost) || 0;
   const clubHouseCharges = parseFloat(formData.club_house_charges) || 300000;
-  const carParkingCharges = parseFloat(formData.car_parking_charges) || 200000;
+  const carParkingCharges = parseFloat(formData.car_parking_charges) || 300000;
   const additionalCharges = parseFloat(formData.additional_charges) || 0;
   const bescomRate = parseFloat(formData.bescom_rate) || 0;
 
